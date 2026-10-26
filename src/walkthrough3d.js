@@ -789,7 +789,7 @@ function buildWindowSash(scene, windowStructure, center, frameMaterial) {
   return controller;
 }
 
-export function buildScene(scene, zones, items, structures, wallHeight, center, assets) {
+export function buildScene(scene, zones, items, structures, wallHeight, center, assets, { automaticWalls = true } = {}) {
   const wallHeightMeters = Math.max(wallHeight, ...zones.map((zone) => zone.height ?? wallHeight)) / 100;
   const toWorld = (x, y) => ({ x: (x - center.x) / 100, z: (y - center.y) / 100 });
   const wallMaterial = material(0xe8e4db, 0.9);
@@ -937,14 +937,14 @@ export function buildScene(scene, zones, items, structures, wallHeight, center, 
     });
   };
 
-  getExteriorWallSegments(zones).forEach((segment) => buildWallSegment(
+  (automaticWalls ? getExteriorWallSegments(zones) : []).forEach((segment) => buildWallSegment(
     segment,
     automaticWallOpenings(segment),
     wallHeightMeters,
     WALL_THICKNESS_M,
     isPositiveFacingExterior(segment, zones),
   ));
-  getInteriorWallSegments(zones).forEach((segment) => buildWallSegment(segment, automaticWallOpenings(segment)));
+  (automaticWalls ? getInteriorWallSegments(zones) : []).forEach((segment) => buildWallSegment(segment, automaticWallOpenings(segment)));
   userWalls.forEach((wall) => {
     const first = scene.children.length;
     buildWallSegment(

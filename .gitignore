@@ -11,3 +11,6 @@ venv/
 *.log
 .env*
 !.env.example
+
+# Local QA, private floor plans and recoverable development artifacts
+.code/

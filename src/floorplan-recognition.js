@@ -52,7 +52,7 @@ function lineRuns(mask, width, height, vertical, visit) {
   }
 }
 
-function wallEvidence(dark, width, height, edge) {
+function legacyWallEvidence(dark, width, height, edge) {
   const horizontal = new Uint16Array(dark.length), vertical = new Uint16Array(dark.length);
   for (const [isVertical, lengths] of [[false, horizontal], [true, vertical]]) {
     lineRuns(dark, width, height, isVertical, (line, start, end, indexOf) => {
@@ -85,6 +85,177 @@ function wallEvidence(dark, width, height, edge) {
       || Math.max(region.right - region.left, region.bottom - region.top) >= edge * 0.4))
     .map(region => region.id));
   for (let i = 0; i < mask.length; i += 1) mask[i] = retained.has(labels[i]) ? 1 : 0;
+  return { mask, minRun };
+}
+
+function runLengths(mask, width, height) {
+  const horizontal = new Uint16Array(mask.length), vertical = new Uint16Array(mask.length);
+  for (const [direction, lengths] of [[false, horizontal], [true, vertical]]) {
+    lineRuns(mask, width, height, direction, (line, start, end, indexOf) => {
+      for (let p = start; p < end; p += 1) lengths[indexOf(line, p)] = end - start;
+    });
+  }
+  return { horizontal, vertical };
+}
+
+function wallEvidence(dark, width, height, edge) {
+  const minRun = Math.max(6, Math.round(edge * 0.025));
+  const maxThickness = Math.max(3, Math.round(edge * 0.035));
+  const original = runLengths(dark, width, height);
+  const histogram = new Uint32Array(maxThickness + 1);
+  let coreCount = 0;
+  for (let i = 0; i < dark.length; i += 1) {
+    if (!dark[i] || Math.max(original.horizontal[i], original.vertical[i]) < minRun) continue;
+    const t = Math.min(original.horizontal[i], original.vertical[i]);
+    if (t <= maxThickness) histogram[t] += 1;
+    if (t >= 3) coreCount += 1;
+  }
+  let thickness = 0;
+  for (let t = 3; t < histogram.length; t += 1) {
+    if (histogram[t] > histogram[thickness]) thickness = t;
+  }
+  // Thin-line plans need their original contour, including diagonal walls.
+  // Detailed CAD drawings instead have solid wall cores distinct from furniture.
+  if (thickness < 5 || coreCount < minRun * 12) return legacyWallEvidence(dark, width, height, edge);
+
+  const axes = [];
+  const rawAt = (vertical, line, p) => dark[vertical ? p * width + line : line * width + p] ?? 0;
+  const supportedAt = (axis, p) => {
+    for (let line = axis.lo; line <= axis.hi; line += 1) {
+      if (rawAt(axis.vertical, line, p)) return true;
+    }
+    return false;
+  };
+  const coverage = (axis, start, end) => {
+    let count = 0;
+    for (let p = Math.ceil(start); p < Math.floor(end); p += 1) {
+      if (supportedAt(axis, p)) count += 1;
+    }
+    return count / Math.max(1, Math.floor(end) - Math.ceil(start));
+  };
+
+  for (const vertical of [false, true]) {
+    const normal = vertical ? width : height, along = vertical ? height : width;
+    const minimum = Math.max(3, Math.round(thickness * 0.55));
+    let current = null;
+    for (let line = 0; line < normal; line += 1) {
+      let start = along, end = 0, run = 0;
+      const intervals = [];
+      for (let p = 0; p <= along; p += 1) {
+        const i = vertical ? p * width + line : line * width + p;
+        const solid = p < along && dark[i] && Math.min(original.horizontal[i], original.vertical[i]) >= minimum;
+        if (solid) { run += 1; continue; }
+        if (run >= minRun) {
+          start = Math.min(start, p - run); end = p;
+          intervals.push([p - run, p]);
+        }
+        run = 0;
+      }
+      if (!end) { current = null; continue; }
+      // Require overlapping solid runs: distant piers must not widen a wall band.
+      if (current && line === current.hi + 1 && intervals.some(a => current.intervals.some(b =>
+        Math.min(a[1], b[1]) - Math.max(a[0], b[0]) >= minRun))) {
+        current.hi = line;
+        current.start = Math.min(current.start, start);
+        current.end = Math.max(current.end, end);
+        current.intervals = intervals;
+      } else {
+        current = { vertical, lo: line, hi: line, start, end, intervals };
+        axes.push(current);
+      }
+    }
+  }
+
+  // A wide drifting band is an angled wall, not an orthogonal CAD axis.
+  // Keep the contour path for these plans rather than flattening the diagonal.
+  if (axes.some(axis => axis.hi - axis.lo + 1 > maxThickness)) {
+    return legacyWallEvidence(dark, width, height, edge);
+  }
+  const candidates = [];
+  // Nearby parallel strokes with ink between them suggest a hatched wall or
+  // glazing. A single dimension line, bed edge or door swing is insufficient.
+  for (const vertical of [false, true]) {
+    const lines = Array.from({ length: vertical ? width : height }, () => []);
+    const minRail = Math.max(10, Math.round(thickness * 1.5));
+    lineRuns(dark, width, height, vertical, (line, start, end) => {
+      if (end - start >= minRail) lines[line].push({ start, end });
+    });
+    for (let line = 0; line < lines.length; line += 1) {
+      for (const first of lines[line]) {
+        const limit = Math.min(lines.length, line + Math.round(thickness * 1.2) + 1);
+        for (let next = line + Math.max(3, Math.round(thickness * 0.5)); next < limit; next += 1) {
+          let matched = false;
+          for (const second of lines[next]) {
+            const start = Math.max(first.start, second.start), end = Math.min(first.end, second.end);
+            if (end - start < minRail) continue;
+            let ink = 0;
+            for (let p = start; p < end; p += 1) {
+              for (let n = line; n <= next; n += 1) ink += rawAt(vertical, n, p);
+            }
+            if (ink / ((next - line + 1) * (end - start)) < 0.35) continue;
+            const center = (line + next) / 2;
+            if (axes.some(a => a.vertical === vertical && center >= a.lo - thickness * 0.3
+              && center <= a.hi + thickness * 0.3)) continue;
+            const candidate = candidates.find(c => c.vertical === vertical
+              && Math.abs((c.lo + c.hi) / 2 - center) < thickness * 0.5);
+            if (candidate) {
+              candidate.lo = Math.min(candidate.lo, line); candidate.hi = Math.max(candidate.hi, next);
+              candidate.start = Math.min(candidate.start, start); candidate.end = Math.max(candidate.end, end);
+            } else candidates.push({ vertical, lo: line, hi: next, start, end });
+            matched = true;
+          }
+          if (matched) break;
+        }
+      }
+    }
+  }
+  const reaches = (axis, p) => {
+    if (p >= axis.start - thickness && p <= axis.end + thickness) return true;
+    const endpoint = p < axis.start ? axis.start : axis.end;
+    const start = Math.min(p, endpoint), end = Math.max(p, endpoint);
+    return end - start < edge * 0.25 && coverage(axis, start, end) > 0.75;
+  };
+  const extendTo = (axis, cross) => {
+    axis.start = Math.min(axis.start, cross.lo);
+    axis.end = Math.max(axis.end, cross.hi + 1);
+  };
+  // Continue solid walls through supported hatch/window segments to junctions.
+  for (const a of axes) {
+    for (const b of axes) {
+      if (a.vertical === b.vertical) continue;
+      if (reaches(a, (b.lo + b.hi) / 2) && reaches(b, (a.lo + a.hi) / 2)) {
+        extendTo(a, b); extendTo(b, a);
+      }
+    }
+  }
+  // Both ends of a thin wall must join established perpendicular walls. Three
+  // bounded passes allow adjoining hatched partitions to support each other.
+  for (let pass = 0; pass < 3; pass += 1) {
+    for (const candidate of candidates) {
+      if (candidate.accepted) continue;
+      const center = (candidate.lo + candidate.hi) / 2;
+      const anchors = axes.filter(a => a.vertical !== candidate.vertical && reaches(a, center)).sort((a, b) => a.lo - b.lo);
+      for (let i = 0; i < anchors.length - 1; i += 1) {
+        const first = anchors[i], last = anchors[i + 1];
+        const start = (first.lo + first.hi) / 2, end = (last.lo + last.hi) / 2;
+        if (end - start < minRun || candidate.end < start || candidate.start > end
+          || coverage(candidate, start, end) < 0.7) continue;
+        axes.push({ ...candidate, start: Math.floor(start), end: Math.ceil(end) });
+        candidate.accepted = true;
+        extendTo(first, candidate); extendTo(last, candidate);
+      }
+    }
+  }
+  const mask = new Uint8Array(dark.length);
+  for (const axis of axes) {
+    for (let p = axis.start; p < axis.end; p += 1) {
+      if (!supportedAt(axis, p)) continue;
+      for (let line = axis.lo; line <= axis.hi; line += 1) {
+        const x = axis.vertical ? line : p, y = axis.vertical ? p : line;
+        if (x >= 0 && x < width && y >= 0 && y < height) mask[y * width + x] = 1;
+      }
+    }
+  }
   return { mask, minRun };
 }
 

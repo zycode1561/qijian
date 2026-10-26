@@ -1,155 +1,80 @@
-<h1 align="center">Room Studio</h1>
+# 栖间
 
-<p align="center">
-  <a href="https://github.com/achieve0410/room-studio/actions/workflows/ci.yml"><img src="https://github.com/achieve0410/room-studio/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache-2.0 license"></a>
-  <a href="https://achieve0410.github.io/room-studio/"><img src="https://img.shields.io/badge/demo-open-DA7956.svg" alt="Open live demo"></a>
-</p>
+代码仓库：[zycode1561/qijian](https://github.com/zycode1561/qijian)。
 
-<p align="center">
-  <strong>Plan in 2D. Check the layout. Walk it in 3D — from desktop or mobile.</strong>
-</p>
-<p align="center">
-  <a href="https://achieve0410.github.io/room-studio/"><strong>Open the live demo →</strong></a>
-  ·
-  <a href="#quick-start">Run locally</a>
-  ·
-  <a href="README.ko.md">한국어</a>
-</p>
-<p align="center"><sub>The public demo stores drawings only in this browser and does not enable login.</sub></p>
+中文优先、在本机保存的通用家居规划工具。普通用户通过需求设置、尺寸、组合模板与检查条件定制自己的家，无需修改源码。
 
-Room Studio is a mobile-friendly, browser-based 2D/3D room planner. It combines calibrated floor-plan tracing, directly drawn polygonal rooms, furniture, walls, openings, exact dimensions, height checks, and first-person or overhead WebGL previews without requiring a desktop CAD application.
+基于 [achieve0410/room-studio](https://github.com/achieve0410/room-studio) 的 Vite、Three.js、空间几何及户型识别开发；上游基线提交为 `2a5f266a3450a9b341da0e9ebf3c4b4fdb853244`。保留 [Apache-2.0 许可证](LICENSE)、[第三方声明](THIRD_PARTY_NOTICES.md) 与 [上游 README](README.upstream.md)。
 
-### Arrange a room
+## 本地启动
 
-1. Enter the room's width and depth in centimeters, then choose **이 크기로 시작**.
-2. Define rooms, living areas, and bathrooms in 2D. Choose **직접 그리기** to tap corners or drag straight walls, then close the outline. L-shaped, U-shaped, stepped and angled spaces do not require rectangular parts.
-3. Open 3D editing to place furniture and doors, adjust their position, rotation, and size, then apply or cancel the preview. Choose **걸어보기** to walk through the result.
+需要 Node.js 22.12–24 与支持 WebGL 的现代浏览器。
 
-The 2D workspace defines spaces; furniture and opening symbols are read-only context. Furniture, doors, windows, and manual walls are edited in 3D. Client notes, A/B comparison and proposals are under **배치 비교 · 상담 · 제안서**. Use **파일** to move work between browsers; existing local work reopens automatically.
-
-Select a space and choose **형태** to drag its corners or walls. Tap a wall dimension to preview a new length; the filled **고정** marker identifies the stationary endpoint. Apply commits one undoable edit. **화면 이동** pans over occupied areas, and **전체 보기** explicitly fits the drawing without moving the view after each edit.
-
-### Regional apartment references
-
-The starter's **아파트 샘플 체험** opens a Daechi Raemian Palace reference layout. **샘플** also offers Apgujeong Hyundai 35-pyeong and Dogok Rexle 33A, with connected bedroom, bathroom and balcony openings and naturally open shared spaces. These are original approximations from published plans, not surveyed residences. See [sources, advertised areas and approximation boundaries](docs/REGIONAL_SAMPLES.md).
-
-### Furnished Seoul examples
-
-Choose a Seoul card in the starter, or **샘플 → 3D로 꾸며보기**, to open one of three
-furnished styles. The catalog ships 12 original GLB furniture models, three furniture
-palettes, and seven floor/wall finishes. Select, drag, rotate, replace, and furnish directly
-in 3D; previews commit through the same drawing history and persistence as the 2D editor.
-No per-customer AI generation is required. This release extends the existing Three.js
-renderer, not Pascal's packages or hosted services.
-See the [workflow](docs/SEOUL_ASSET_STUDIO.md) and [asset provenance](docs/asset-library.md).
-
-> Room Studio is a planning and visualization aid, not a substitute for permit, architectural, structural, accessibility, building-services, or construction drawings. Real construction, permitting, and safety decisions require review by qualified architects, engineers, accessibility specialists, and other relevant professionals.
-
-## Live demo
-
-Open the [public Room Studio demo](https://achieve0410.github.io/room-studio/). The demo has no Supabase configuration or login: drawings remain in that browser's `localStorage`, and clearing site data removes them. Do not enter a private or security-sensitive floor plan.
-
-## Highlights
-
-See the [image import workflow and recognition boundaries](docs/FLOORPLAN_IMPORT.md) (Korean).
-
-- Extract editable spaces from a floor-plan photo or screenshot, correct the outlines, confirm a real length, and continue directly to 3D furnishing.
-- Record the client brief, compare independent A/B layouts, and export a branded recommendation document without requiring cloud login.
-- Draw concave and angled spaces directly, edit vertices and wall lengths, or retain existing compound rectangular spaces.
-- Import a PNG or JPG floor plan, calibrate it from two known points, and control its opacity or movement lock.
-- Add persistent distance dimensions and enter exact wall lengths in centimeters.
-- Move, resize, align, and combine spaces in 2D; place and transform furniture in 3D.
-- Duplicate, copy, paste, lock, and nudge selected objects in 1 cm keyboard increments.
-- Edit room ceiling height and furniture elevation to validate vertical fit.
-- Create and edit swing doors, two-panel bypass sliding doors, and sash windows in 3D, with read-only symbols in 2D.
-- Switch between collision-aware first-person, dollhouse, and top-down 3D views; hide ceilings, focus the current selection, or save the current scene as PNG.
-- Work with mouse and keyboard or mobile touch, pinch zoom, resize handles, and a virtual joystick.
-- Keep drawings in local browser storage, or optionally sync user-owned projects through Supabase Auth and Postgres RLS.
-
-## Client consultation workflow
-
-1. Open a sample or import a drawing, expand **배치 비교 · 상담 · 제안서**, then choose **상담 기록** to enter the project, business, client, and requirements.
-2. Edit A, choose **B안 만들기**, and switch to B to explore a different arrangement. Recommendations and next steps stay with each option.
-3. Use **A/B 비교** for side-by-side desktop or stacked mobile plans. Use 3D's lowered-wall overview to explain furniture placement; first-person mode retains full-height walls and collisions.
-4. Choose **고객 제안서** for a self-contained HTML report with both options, measurements, opening symbols, named warnings and current 3D views.
-
-Closing a fully applied 3D view captures that option for the report. Editing its geometry invalidates the capture; reopening 3D refreshes it. These images stay in memory, not in portable files, and are omitted after a reload until each option is viewed again.
-
-Project names and consultation notes survive reload and portable export/import. A/B switching clears the active drawing's undo history so undo cannot modify the other option. Replacing a draft preserves one local recovery copy. Storage failures expose export/retry actions; cloud conflicts allow a separate copy or a protected remote reload.
-
-Portable schema 4 reads older schemas 1, 2 and 3. Both options and their background images share a 1 MiB limit. Polygon points and attached opening edges survive export/import. Optional cloud installations need `20260921000000_polygon_space_schema.sql` before saving schema 4. Floor coverage is a clipped bounding-footprint estimate, not a circulation or installation clearance check.
-
-## Requirements
-
-- Node.js 22.12 or newer (below Node 25)
-- npm
-- A current Chromium, Firefox, or Safari browser with WebGL support
-
-## Quick start
-
-```bash
+```sh
 npm ci
 npm run dev
 ```
 
-The core editor works without any cloud configuration and stores the current drawing in `localStorage`.
+打开 **http://127.0.0.1:5173/**。请保持使用这一地址：浏览器的本地存档按地址和端口隔离，`localhost` 与 `127.0.0.1` 的数据并不共享。
 
-## Validation
-
-```bash
-npm run check
-npm run test:browser:mobile
-npm run test:browser:simple
-npm run test:browser:spaces
-npm run test:browser:consultation
-```
-
-`npm run check` performs syntax checks, unit tests, and a production build. The browser audit launches a local Vite preview and exercises the supported mobile and desktop flows in Chrome.
-
-## Optional Supabase sync
-
-1. Create a Supabase project.
-2. Apply every file in `supabase/migrations/` in filename order.
-3. Deploy `supabase/functions/delete-account` to enable explicit account-data deletion.
-4. Enable email sign-in and, if desired, Google OAuth.
-5. Register every development or deployment origin in Supabase Auth redirect URLs.
-6. Copy `.env.example` to `.env` and enter the public project values.
-
-```dotenv
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
-```
-
-Only the Supabase publishable key belongs in browser configuration. Never place a `service_role` key or OAuth client secret in this repository or in Vite environment variables. See [Self-hosting](docs/SELF_HOSTING.md) for the complete deployment contract.
-
-## Private Tailscale sharing
-
-The included script builds on `tailscale serve` without resetting unrelated handlers. It auto-detects the current device's MagicDNS hostname and defaults to HTTPS `8443` forwarding to Vite preview on `127.0.0.1:4173`.
-
-```bash
+```sh
 npm run build
-./scripts/tailscale-private-serve.sh start
-./scripts/tailscale-private-serve.sh status
+npm run preview
 ```
 
-Existing installations using those defaults continue to work. Other users can override the hostname and ports with environment variables. See [Tailscale deployment](docs/TAILSCALE.md).
+生产预览也固定使用 `127.0.0.1:5173`，运行前先停止开发服务。无需云账户、数据库服务器或素材服务。未配置和启用云同步；未公开部署。原版界面源文件保留在 `upstream.html`，可在开发服务中单独打开。
 
-## Architecture
+## 日常使用
 
-Room Studio deliberately keeps its runtime small: Vite, vanilla JavaScript, Three.js, and an optional dynamically loaded Supabase adapter. See [Architecture](docs/ARCHITECTURE.md) for storage boundaries, rendering modules, and security invariants.
+1. 点击顶部项目名 → 新建项目。可从空白、三个通用示例或导入文件开始。示例分别为一人卧室与办公、多人收纳与用餐、两人两猫与组合柜。示例参数不是用户的默认需求。
+2. 左侧“空间”添加房间，或导入 PNG/JPEG/WebP 底图。导入后自动显示识别轮廓预览，可先用“两点比例校准”输入已知长度（厘米），再勾选空间、改名并点击“生成二维 / 三维模型”。已有内容时可新建导入方案，避免与旧空间重叠。识别失败可沿底图描绘，闭合后同样生成二维与三维模型。生成的尺寸仍需核实，门窗和家具需另行添加。校准只调整底图，已有空间不会悄悄缩放。
 
-## Contributing and support
+   识别采用固定缩图、实心墙体与成对墙线分析，过滤贴墙家具和外围尺寸线；斜墙和细线图保留轮廓识别。输出是待核对的空间候选，开放厨房与客餐厅可能合并，衣柜、玄关及干湿分区附近的边界仍需人工校对，不等同于施工级建模。
 
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
-- Use GitHub issues for reproducible bugs and scoped feature proposals.
-- Do not disclose vulnerabilities in a public issue; follow [SECURITY.md](SECURITY.md).
-- Planned work and explicit non-goals are listed in [ROADMAP.md](ROADMAP.md).
+3. 右侧“需求”可随时填写人数、多个成员、空间用途和需求条目，选择“必须满足 / 尽量满足 / 待确认”。可记录保留家具尺寸、调整约束、偏好及自由备注。更改需求保留已有设计，并提示检查更新。
+4. 点击家具卡片添加。画布拖动或在属性中输入位置、外径、旋转角、离地高、材质与备注。床垫尺寸单独保存。新建家具与识别尺寸默认待确认，请填写尺寸依据后明确确认。
+5. Shift 多选家具，也可使用左侧复选框。“组合”后可整体移动、旋转和复制；“进入组合编辑”处理单件。“保存为个人模板”后可在其他项目复用，或导出模板文件。组合内部装配重叠仅在用户明确勾选时忽略。
+6. 为座椅、抽屉组件等设置“收起 / 使用中”、使用时位移和前后左右预留。可见模型、碰撞外径、使用预留区分别保存。门窗属性控制开合；漫游中点击门也可切换。
+7. 右侧“检查”添加规则，选择对象、相关空间、阈值及状态。路径规则可在画布点选入口和目标，设置包络直径和 1–20 厘米网格；视线规则设置观察坐标、眼高、目标家具或矩形区域、高度和最大可见比例。点击“重新检查”，再点击结果定位。
+8. 顶部方案管理可命名、复制、删除和保护参考基准。材质风格与布局独立，可编辑颜色并复制个人风格。切换布局保留三维观察位置；平面对比使用同一视框。
+9. 漫游可调眼高、移动速度、水平视场角及碰撞半径。眼高不是身高；横竖屏按比例换算相机。WASD / 方向键移动，拖动转头，Q/E 转向，Esc 退出。手机使用方向按钮与拖动，房间下拉框可跳转。
+10. 编辑会自动保存到当前浏览器的 IndexedDB。导出可携带项目（含底图、全部方案及需求）、全部项目与模板备份、个人模板、当前视角 PNG 或可离线阅读/打印的中文 HTML 报告。恢复始终建立独立副本，不覆盖已有项目。
 
-## Privacy
+删除空间或家具：点击左侧对应条目旁的垃圾桶，或选中对象后点击画布上方“删除”。锁定对象需先解锁；受保护方案需复制后编辑。误删可立即撤销。
 
-The local-only editor sends no drawing to the project database. A self-hosted operator who enables Supabase becomes responsible for the authentication and drawing data stored in that deployment. See [Privacy and operator responsibilities](docs/PRIVACY.md).
+快捷键：Ctrl/⌘ Z 撤销，Shift Z 重做，Ctrl/⌘ D 复制，Delete 删除，方向键移动 1 厘米，Shift + 方向键移动 10 厘米，R 旋转 15°，Home 全部显示。
 
-## License
+## 存储与兼容
 
-Licensed under the [Apache License 2.0](LICENSE). Commercial use is allowed by the license; the maintainers do not currently operate Room Studio as a paid product.
+- IndexedDB 数据库：`qijian-local-v1`；项目、个人模板、上一份恢复副本与界面元数据分开保存。
+- 保存使用原子事务；失败时既有存档不变，未保存设计仍在内存，可立即导出并重试。保存失败状态明确显示。
+- `.qijian.json` 使用版本化数据；读取栖间 schema 1/2，兼容 Room Studio schema 1–4 的项目文件及 A/B 方案。用户名称、说明与备注原样保留。
+- 文件上限为 80 MB，图片导入上限为 20 MB；图像在本地压缩并内嵌。浏览器配额由浏览器决定。
+- 定期下载完整备份。浏览器清除网站数据或更换浏览器不会自动转移存档。首版没有云账户或多用户平台。
+
+## 检查的含义与限制
+
+- 相交、净距及人物碰撞采用旋转矩形外形和高度区间；异形、圆柱和曲面按外包近似。墙体与门扇几何复用上游分段机制。可见模型的外径适配项目参数，独立碰撞外径可主动调整。
+- 物体超界使用实际旋转矩形与房间多边形的覆盖面积。通用规则可以停用；未知规则显示“暂不支持”。
+- 路径是离散网格加圆形包络，并额外考虑半格对角线余量。窄转角可能出现保守的“未找到路径”；可缩小关联空间并降低网格步长。超过 18 万网格时明确显示暂不支持。它不等同于几何无相交，也不等同于用户舒适使用空间。
+- 视线对目标矩形区域做 9×9 采样，使用完整墙高、当前门状态与透明属性。只对指定观察点和目标高度有效，不保证所有站位的隐私。
+- 未确认尺寸、缺失对象、算法不支持以及未关联验证规则的自由文字，均不会自动显示“满足”。规则阈值由用户设置，不作为普遍适用的强制标准。
+- 家具外形为尺度示意，不是生产拆单模型。首版支持单层组合、参数化状态与基础材质，尚无嵌套组合、五金仿真、任意网格碰撞或照片级渲染。
+- 手机优先查看、漫游和简单参数修改；桌面提供完整编辑。已做 390 像素触屏浏览器模拟验证，未在真实手机硬件上实测。
+
+## 验证
+
+```sh
+npm run check
+npm run test:browser:qijian
+```
+
+`check` 包括适用的上游语法、单元测试与生产构建，以及栖间几何/状态/迁移回归。浏览器脚本使用本机 Chrome（macOS 默认路径，可用 `CHROME_BIN` 覆盖），需要先运行开发服务；覆盖桌面及手机视口、组合、撤销、需求变更、文件、存储不足、漫游、底图、轮廓、尺寸与规则编辑。
+
+本机验证日志和截图在 `.code/`。其中 `local-validation/` 保存用户旧项目迁移与验证材料，已被 Git 忽略，不属于分发示例；旧目录仅被读取，未覆盖。旧模型的部分门窗保留为静态组合，圆柱、曲线和装饰使用包围盒，相关尺寸保持待确认。
+
+## 代码位置
+
+`src/qijian/` 按语言资源、项目与历史、模板示例、二维、三维、空间计算、检查、IndexedDB、导入与报告拆分。原上游模块保留；`src/walkthrough3d.js` 仅增加了可选的自动墙体开关，默认行为兼容上游。
+
+更多数据结构见 [docs/QIJIAN-DATA.md](docs/QIJIAN-DATA.md)，验证清单见 [docs/QIJIAN-VALIDATION.md](docs/QIJIAN-VALIDATION.md)。

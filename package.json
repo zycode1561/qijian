@@ -1,17 +1,17 @@
 {
-  "name": "room-studio",
+  "name": "qijian",
   "private": true,
-  "version": "1.0.0",
-  "description": "A mobile-friendly open-source 2D/3D room planning and walkthrough tool.",
+  "version": "0.1.0",
+  "description": "栖间：中文、通用、本地保存的家居规划工具",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/achieve0410/room-studio.git"
+    "url": "git+https://github.com/zycode1561/qijian.git"
   },
   "bugs": {
-    "url": "https://github.com/achieve0410/room-studio/issues"
+    "url": "https://github.com/zycode1561/qijian/issues"
   },
-  "homepage": "https://achieve0410.github.io/room-studio/",
+  "homepage": "https://github.com/zycode1561/qijian#readme",
   "keywords": [
     "floor-plan",
     "interior-design",
@@ -24,10 +24,10 @@
     "node": ">=22.12 <25"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "node --check src/main.js && node --check src/cloud-store.js && node --check src/consultation.js && node --check src/consultation-ui.js && node --check src/local-draft.js && node --check src/project-file.js && node --check src/project-report.js && node --check src/plan-svg.js && node --check src/geometry.js && node --check src/space-geometry.js && node --check src/space-editor.js && node --check src/layout-tools.js && node --check src/floorplan-import.js && node --check src/floorplan-import-ui.js && node --check src/floorplan-recognition.js && node --check src/floorplan-recognition.worker.js && node --check src/floorplan-ocr.js && node --check src/walkthrough3d.js && node --check vite.config.js && sh -n scripts/tailscale-private-serve.sh",
+    "preview": "vite preview --host 127.0.0.1 --port 5173 --strictPort",
+    "lint": "node --check src/main.js && node --check src/cloud-store.js && node --check src/consultation.js && node --check src/consultation-ui.js && node --check src/local-draft.js && node --check src/project-file.js && node --check src/project-report.js && node --check src/plan-svg.js && node --check src/geometry.js && node --check src/space-geometry.js && node --check src/space-editor.js && node --check src/layout-tools.js && node --check src/floorplan-import.js && node --check src/floorplan-import-ui.js && node --check src/floorplan-recognition.js && node --check src/floorplan-recognition.worker.js && node --check src/floorplan-ocr.js && node --check src/walkthrough3d.js && node --check vite.config.js && sh -n scripts/tailscale-private-serve.sh && node scripts/check-qijian.mjs",
     "test": "node --test tests/*.test.js",
     "test:browser:mobile": "npm run build && node scripts/mobile-browser-audit.mjs",
     "test:browser:floorplan": "node tests/floorplan-import.browser.mjs",
@@ -40,7 +40,9 @@
     "test:browser:assets": "node scripts/seoul-assets-browser-audit.mjs && node tests/studio3d.browser.mjs",
     "assets:build": "node scripts/build-room-assets.mjs --render",
     "assets:examples": "node scripts/capture-seoul-examples.mjs",
-    "check": "npm run lint && npm run test && npm run build"
+    "check": "npm run lint && npm run test && npm run build",
+    "test:qijian": "node --test tests/qijian.test.js",
+    "test:browser:qijian": "node tests/qijian.browser.mjs && node tests/qijian-editing.browser.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.62.1",

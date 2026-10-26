@@ -1,0 +1,17 @@
+Qijian / 栖间
+Derived from Room Studio: https://github.com/achieve0410/room-studio
+Upstream revision: 2a5f266a3450a9b341da0e9ebf3c4b4fdb853244
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+Modification notice (2026-10-26):
+Added a Chinese local workbench, general project/household requirement model,
+composite furniture templates, configurable spatial checks, local IndexedDB
+project storage, portable backup/import, Chinese reporting, and integrated
+2D/3D editing and configurable first-person navigation.
+The upstream scene builder gained an optional automatic-wall switch; its
+existing default behavior is retained.
+
+Upstream authorship and third-party attribution remain in README.upstream.md,
+THIRD_PARTY_NOTICES.md and public/assets/room-studio/.
+Three.js is distributed under the MIT license; its license is retained in
+public/assets/room-studio/THREE-LICENSE.txt.

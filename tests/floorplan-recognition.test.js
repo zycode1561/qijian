@@ -1,3 +1,4 @@
+import { resizeRecognitionImage } from '../src/qijian/recognition-raster.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recognizeFloorplan } from '../src/floorplan-recognition.js';
@@ -183,4 +184,85 @@ test('threshold and gap options have bounded explicit behavior and malformed inp
   }
   assert.throws(() => recognizeFloorplan({ width: 2, height: 2, data: new Uint8ClampedArray(3) }), TypeError);
   assert.throws(() => recognizeFloorplan({ width: 1001, height: 1, data: new Uint8ClampedArray(4004) }), TypeError);
+});
+
+// Synthetic CAD drawing: no private apartment image is checked into the repo.
+function detailedCadPlan({ hatch = false, door = false } = {}) {
+  const image = raster(600, 440);
+  stroke(image, [[100, 100], [500, 100], [500, 360], [100, 360]], 10, undefined, true);
+  if (hatch) {
+    stroke(image, [[296, 100], [296, 360]], 1);
+    stroke(image, [[304, 100], [304, 360]], 1);
+    for (let y = 104; y < 352; y += 4) stroke(image, [[296, y], [304, y + 8]], 1);
+  } else stroke(image, [[300, 100], [300, 360]], 10);
+  if (door) fillRect(image, 294, 225, 306, 253);
+  // External dimension rectangles are connected to actual walls.
+  stroke(image, [[100, 100], [100, 40], [500, 40], [500, 100]], 1);
+  stroke(image, [[500, 100], [560, 100], [560, 360], [500, 360]], 1);
+  // Bed and built-in furniture share ink with the enclosing wall.
+  stroke(image, [[100, 150], [235, 150], [235, 245], [100, 245]], 1, undefined, true);
+  stroke(image, [[100, 150], [235, 200], [100, 245]], 1);
+  stroke(image, [[365, 100], [365, 185], [500, 185]], 1);
+  return image;
+}
+
+test('CAD wall cores exclude connected exterior dimensions and attached bed/cabinet outlines', () => {
+  const result = recognizeFloorplan(detailedCadPlan());
+  assert.equal(result.rooms.length, 2);
+  assert.equal(roomAt(result, 200, 70), undefined);
+  assert.equal(roomAt(result, 530, 200), undefined);
+  assert.equal(roomAt(result, 150, 190)?.id, roomAt(result, 250, 280)?.id, 'the bed remains inside the room');
+  assert.equal(roomAt(result, 400, 140)?.id, roomAt(result, 350, 280)?.id, 'the cabinet is not a separate room');
+  assert.notEqual(roomAt(result, 200, 280)?.id, roomAt(result, 400, 280)?.id);
+  assert.ok(result.rooms.every(room => room.points.length === 4 && room.area > 47000));
+  validate(result);
+});
+
+test('paired hatched partitions join solid walls and retain an actual door gap', () => {
+  const result = recognizeFloorplan(detailedCadPlan({ hatch: true, door: true }));
+  assert.equal(result.rooms.length, 2);
+  assert.notEqual(roomAt(result, 200, 280)?.id, roomAt(result, 400, 280)?.id);
+  assert.ok(result.openings.some(opening => opening.roomIds.length === 2
+    && Math.abs(opening.start.x - 300) < 8 && Math.abs(opening.start.y - 225) < 5));
+  assert.equal(roomAt(result, 530, 200), undefined);
+  validate(result);
+});
+
+
+test('thick angled walls retain their diagonal boundary rather than forming orthogonal CAD bands', () => {
+  for (const thickness of [6, 10]) {
+    const image = raster(480, 380);
+    stroke(image, [[40, 40], [420, 40], [370, 320], [130, 320], [40, 210]], thickness, undefined, true);
+    const result = recognizeFloorplan(image);
+    assert.equal(result.rooms.length, 1);
+    assert.ok(roomAt(result, 100, 150));
+    assert.ok(roomAt(result, 300, 280));
+    assert.equal(roomAt(result, 400, 300), undefined);
+    assert.ok(result.rooms[0].points.some((p, i, points) => {
+      const q = points[(i + 1) % points.length];
+      return Math.abs(p.x - q.x) > 15 && Math.abs(p.y - q.y) > 15;
+    }));
+    validate(result);
+  }
+});
+
+test('deterministic scan resizing preserves CAD interiors at a fractional reduction', () => {
+  const original = detailedCadPlan({ hatch: true, door: true });
+  const large = raster(original.width * 2, original.height * 2);
+  for (let y = 0; y < large.height; y += 1) for (let x = 0; x < large.width; x += 1) {
+    const source = (Math.floor(y / 2) * original.width + Math.floor(x / 2)) * 4;
+    large.data.set(original.data.subarray(source, source + 4), (y * large.width + x) * 4);
+  }
+  const before = large.data.slice();
+  const resized = resizeRecognitionImage(large);
+  assert.equal(resized.width, 900);
+  assert.equal(resized.height, 660);
+  assert.deepEqual(large.data, before);
+  const result = recognizeFloorplan(resized);
+  assert.equal(result.rooms.length, 2);
+  assert.equal(roomAt(result, 795, 300), undefined);
+  assert.ok(roomAt(result, 225, 285));
+  assert.deepEqual(resizeRecognitionImage(large), resized);
+  assert.equal(resizeRecognitionImage(original), original, 'small images are not blurred again');
+  validate(result);
 });
