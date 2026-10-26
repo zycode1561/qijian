@@ -10,7 +10,31 @@ venv/
 삭제/
 *.log
 .env*
-!.env.example
 
 # Local QA, private floor plans and recoverable development artifacts
 .code/
+
+# Local development, QA and hosting files are not part of the published source
+.github/
+.omo/
+.openai/
+.sites*/
+sites/
+tests/
+scripts/
+supabase/
+docs/workflow-templates/
+docs/QIJIAN-VALIDATION.md
+docs/SELF_HOSTING.md
+docs/TAILSCALE.md
+
+# Upstream development records and documentation kept only in this checkout
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+DESIGN.md
+README.ko.md
+ROADMAP.md
+SECURITY.md
+docs/*
+!docs/QIJIAN-DATA.md
